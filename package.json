@@ -1,0 +1,21 @@
+{
+  "name": "webxr-animals-gallery",
+  "version": "1.0.0",
+  "description": "Dự án WebXR Khám phá 10 loài động vật 3D trong không gian ảo - Đồ án sinh viên năm 3",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "py": "python server.py"
+  },
+  "keywords": [
+    "webxr",
+    "a-frame",
+    "threejs",
+    "virtual-reality",
+    "3d-animals",
+    "education"
+  ],
+  "author": "Sinh viên năm 3",
+  "license": "MIT"
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/vendor/aframe.min.js"></script>
+</head>
+<body>
+<a-scene id="scene">
+  <a-box id="box" class="clickable" position="0 1.6 -3" color="red"></a-box>
+  <a-entity id="rig" position="0 0 0">
+    <a-camera id="cam" cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 60"></a-camera>
+  </a-entity>
+</a-scene>
+<div id="res">NO_CLICK</div>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#box').addEventListener('click', (e) => {
+    document.querySelector('#res').innerText = 'CLICK_SUCCESS: ' + e.target.id;
+  });
+
+  // Emulate canvas click
+  setTimeout(() => {
+    var canvas = document.querySelector('canvas');
+    if (canvas) {
+      var rect = canvas.getBoundingClientRect();
+      var evt = new MouseEvent('click', {
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        bubbles: true
+      });
+      canvas.dispatchEvent(evt);
+    }
+  }, 1500);
+});
+</script>
+</body>
+</html>

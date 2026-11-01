@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/vendor/aframe.min.js"></script>
+<script src="js/vendor/aframe-extras.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="ui-overlay">
+  <div id="welcome-screen">
+    <button id="btn-start" onclick="startExperience()">Start</button>
+  </div>
+</div>
+<a-scene id="main-scene">
+  <a-entity id="rig" position="0 0 12">
+    <a-camera id="main-camera" wasd-controls look-controls position="0 1.6 0"></a-camera>
+  </a-entity>
+</a-scene>
+<div id="test-output"></div>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  var cam = document.querySelector('#main-camera');
+  var rig = document.querySelector('#rig');
+  setTimeout(() => {
+    // Simulate keydown 'w'
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW', key: 'w', keyCode: 87, which: 87 }));
+    setTimeout(() => {
+      var camPos = cam.getAttribute('position');
+      var rigPos = rig.getAttribute('position');
+      document.querySelector('#test-output').innerText = JSON.stringify({
+        camPos: camPos,
+        rigPos: rigPos,
+        wasdActive: cam.components['wasd-controls'] ? true : false,
+        wasdEnabled: cam.components['wasd-controls'] ? cam.components['wasd-controls'].data.enabled : false,
+        lookActive: cam.components['look-controls'] ? true : false,
+        lookEnabled: cam.components['look-controls'] ? cam.components['look-controls'].data.enabled : false
+      });
+    }, 500);
+  }, 1500);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phòng Trưng Bày Động Vật 3D - WebXR</title>
+  <!-- Sử dụng thư viện cục bộ (hoạt động 100% offline) -->
+  <script src="js/vendor/aframe.min.js"></script>
+  <script src="js/vendor/aframe-extras.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===== UI OVERLAY ===== -->
+  <div id="ui-overlay">
+
+    <!-- Màn hình Welcome -->
+    <div id="welcome-screen">
+      <div class="welcome-card">
+        <div class="welcome-logo">🌿</div>
+        <h1>Phòng Trưng Bày<br/>Động Vật 3D</h1>
+        <p class="welcome-sub">Khám phá 10 loài động vật trong không gian ảo WebXR</p>
+        <div class="welcome-controls">
+          <div class="control-item"><span class="key">W A S D</span> Di chuyển</div>
+          <div class="control-item"><span class="key">Kéo chuột</span> Nhìn xung quanh</div>
+          <div class="control-item"><span class="key">Click</span> Chọn động vật</div>
+          <div class="control-item"><span class="key">R</span> Về vị trí ban đầu</div>
+          <div class="control-item"><span class="key">T</span> Tham quan tự động</div>
+          <div class="control-item"><span class="key">H</span> Ẩn/hiện hướng dẫn</div>
+        </div>
+        <button id="btn-start" onclick="startExperience()">🚀 Bắt đầu khám phá (hoặc nhấn phím bất kỳ)</button>
+        <button id="btn-vr" onclick="enterVR()" style="display:none;">🥽 Vào chế độ VR</button>
+        <p id="vr-status" class="vr-status-text"></p>
+      </div>
+    </div>
+
+    <!-- HUD trong game -->
+    <div id="game-hud" style="display:none;">
+      <div id="hud-top">
+        <span id="hud-title">🌿 WebXR Động Vật 3D</span>
+        <div id="hud-btns">
+          <button class="hud-btn" id="btn-tour-toggle" onclick="toggleAutoTour()" title="Tham quan tự động (T)">🚶‍♂️</button>
+          <button class="hud-btn" id="btn-audio-toggle" onclick="toggleAudio()" title="Bật/Tắt âm thanh">🔊</button>
+          <button class="hud-btn" id="btn-map-toggle" onclick="toggleMiniMap()" title="Ẩn/Hiện bản đồ mini (M)">🗺️</button>
+          <button class="hud-btn" onclick="resetCamera()" title="Về vị trí ban đầu (R)">🏠</button>
+          <button class="hud-btn" id="btn-help-toggle" onclick="toggleHelp()" title="Hướng dẫn (H)">❓</button>
+          <button class="hud-btn" id="btn-vr-hud" onclick="enterVR()" style="display:none;" title="Chế độ VR">🥽</button>
+          <button class="hud-btn" onclick="showWelcome()" title="Về menu chính">☰</button>
+        </div>
+      </div>
+      <div id="hud-species-nav">
+        <span class="nav-label">Đến loài:</span>
+        <div id="species-buttons"></div>
+      </div>
+    </div>
+
+    <!-- Auto Tour Banner (khi bật tham quan tự động) -->
+    <div id="auto-tour-banner" style="display:none;">
+      <span id="tour-status-text">🚶‍♂️ Tham quan tự động: Đang đến loài...</span>
+      <button class="tour-btn" id="btn-tour-pause" onclick="togglePauseTour()">⏸️ Tạm dừng</button>
+      <button class="tour-btn tour-btn-stop" onclick="stopAutoTour()">⏹️ Dừng tour</button>
+    </div>
+
+    <!-- Mini-Map Radar -->
+    <div id="mini-map-container" style="display:none;">
+      <div id="mini-map-title">BẢN ĐỒ KHU VỰC</div>
+      <canvas id="mini-map-canvas" width="170" height="170"></canvas>
+    </div>
+
+    <!-- Panel thông tin động vật -->
+    <div id="info-panel" style="display:none;">
+      <div class="info-card">
+        <button class="info-close" onclick="closeInfo()">✕</button>
+        <span id="info-badge" class="info-badge">Loài 1/10</span>
+        <div id="info-emoji" class="info-emoji"></div>
+        <h2 id="info-name"></h2>
+        <h3 id="info-sci-name"></h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">🏠 Môi trường sống</span>
+            <span id="info-habitat" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🍽️ Thức ăn</span>
+            <span id="info-food" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">📏 Kích thước</span>
+            <span id="info-size" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">⚖️ Cân nặng</span>
+            <span id="info-weight" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🌍 Phân bố</span>
+            <span id="info-region" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🔴 Tình trạng</span>
+            <span id="info-status" class="info-value"></span>
+          </div>
+        </div>
+        <p id="info-desc" class="info-desc"></p>
+        <div id="info-fun-fact" class="fun-fact"></div>
+
+        <div class="info-actions">
+          <div class="info-nav-group">
+            <button class="info-nav-btn" onclick="prevAnimal()" title="Loài trước đó">◀</button>
+            <button class="info-nav-btn" onclick="nextAnimal()" title="Loài tiếp theo">▶</button>
+          </div>
+          <button class="info-act-btn" id="btn-speak-info" onclick="speakCurrentInfo()">
+            <span>🔊</span> <span id="speak-btn-text">Thuyết minh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help overlay -->
+    <div id="help-overlay" style="display:none;">
+      <div class="help-card">
+        <h3>🕹️ Hướng dẫn thao tác</h3>
+        <table>
+          <tr><td><span class="key">W A S D</span></td><td>Di chuyển tiến/lui/trái/phải</td></tr>
+          <tr><td><span class="key">↑ ↓ ← →</span></td><td>Di chuyển bằng phím mũi tên</td></tr>
+          <tr><td><span class="key">Kéo chuột</span></td><td>Nhìn xung quanh (xoay góc nhìn)</td></tr>
+          <tr><td><span class="key">Click chuột</span></td><td>Chọn xem thông tin động vật</td></tr>
+          <tr><td><span class="key">T</span></td><td>Bật/Tắt tham quan tự động</td></tr>
+          <tr><td><span class="key">M</span></td><td>Bật/Tắt bản đồ mini</td></tr>
+          <tr><td><span class="key">R</span></td><td>Về vị trí ban đầu</td></tr>
+          <tr><td><span class="key">H</span></td><td>Ẩn/hiện hướng dẫn</td></tr>
+          <tr><td><span class="key">Esc</span></td><td>Đóng bảng thông tin</td></tr>
+          <tr><td><span class="key">1–0</span></td><td>Teleport nhanh tới loài 1–10</td></tr>
+        </table>
+        <p style="margin-top:12px;color:#aaa;font-size:13px;">
+          🥽 Nếu có kính VR: Nhấn nút <strong>🥽 VR</strong> để vào chế độ nhập vai<br/>
+          💻 Chế độ 3D máy tính: Hỗ trợ chuột + bàn phím đầy đủ
+        </p>
+      </div>
+    </div>
+
+    <!-- Progress loading -->
+    <div id="loading-screen">
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <p>Đang tải cảnh 3D WebXR...</p>
+      </div>
+    </div>
+
+  </div><!-- end ui-overlay -->
+
+  <!-- ===== A-FRAME SCENE ===== -->
+  <a-scene
+    id="main-scene"
+    renderer="antialias: true; colorManagement: true"
+    shadow="type: pcfsoft"
+    vr-mode-ui="enabled: true"
+    loading-screen="enabled: false"
+    cursor="rayOrigin: mouse"
+    raycaster="objects: .clickable, .clickable-vr; far: 100"
+  >
+
+    <!-- ===== LIGHTING ===== -->
+    <a-light type="ambient" color="#ffffff" intensity="0.75"></a-light>
+    <a-light type="directional" color="#fff8e7" intensity="1.2"
+      position="10 20 5" castShadow="true"
+      shadow-camera-left="-35" shadow-camera-right="35"
+      shadow-camera-top="35" shadow-camera-bottom="-35"
+      shadow-camera-near="0.1" shadow-camera-far="100">
+    </a-light>
+    <a-light type="hemisphere" color="#87CEEB" groundColor="#8B7355" intensity="0.45"></a-light>
+
+    <!-- ===== ENVIRONMENT ===== -->
+
+    <!-- Ground sàn cỏ lớn -->
+    <a-plane
+      rotation="-90 0 0"
+      width="130" height="130"
+      color="#4a7c59"
+      shadow="receive: true"
+      material="roughness: 0.9; metalness: 0">
+    </a-plane>
+
+    <!-- Paths đường đi giữa các khu -->
+    <a-plane rotation="-90 0 0" position="0 0.01 0" width="3.5" height="100" color="#c8a96e" material="roughness:1"></a-plane>
+    <a-plane rotation="-90 0 0" position="0 0.01 0" width="100" height="3.5" color="#c8a96e" material="roughness:1"></a-plane>
+
+    <!-- Sky -->
+    <a-sky color="#87CEEB"></a-sky>
+
+    <!-- Distant mountains / hills -->
+    <a-entity id="hills">
+      <a-sphere position="40 -5 -50" radius="18" color="#3a6b4a" segments-height="8" segments-width="8"></a-sphere>
+      <a-sphere position="-40 -5 -50" radius="22" color="#2d5a3d" segments-height="8" segments-width="8"></a-sphere>
+      <a-sphere position="0 -3 -55" radius="15" color="#4a7c59" segments-height="8" segments-width="8"></a-sphere>
+      <a-sphere position="55 -5 0" radius="20" color="#3a6b4a" segments-height="8" segments-width="8"></a-sphere>
+      <a-sphere position="-55 -5 0" radius="20" color="#2d5a3d" segments-height="8" segments-width="8"></a-sphere>
+    </a-entity>
+
+    <!-- Trees decorative -->
+    <a-entity id="trees"></a-entity>
+
+    <!-- Fence / boundary -->
+    <a-entity id="boundary"></a-entity>
+
+    <!-- ===== 10 ANIMAL EXHIBITS ===== -->
+    <a-entity id="exhibits"></a-entity>
+
+    <!-- ===== VR IN-SCENE INFO PANEL (hiển thị khi ở chế độ VR) ===== -->
+    <a-entity id="vr-info-panel" visible="false" position="0 1.5 -2">
+      <a-plane id="vr-info-bg" width="1.6" height="1.2" color="#0a1e0f"
+        material="transparent: true; opacity: 0.92; side: double"
+        position="0 0 0">
+      </a-plane>
+      <a-plane width="1.64" height="1.24" color="#2ecc71"
+        material="transparent: true; opacity: 0.5; side: double"
+        position="0 0 -0.002">
+      </a-plane>
+      <a-text id="vr-info-name" value="" align="center" color="#2ecc71"
+        width="1.4" wrap-count="22" position="0 0.42 0.01" font="roboto"></a-text>
+      <a-text id="vr-info-sci" value="" align="center" color="#8ecf9e"
+        width="1.2" wrap-count="30" position="0 0.3 0.01" font="roboto"></a-text>
+      <a-text id="vr-info-habitat" value="" align="left" color="#ffffff"
+        width="1.3" wrap-count="40" position="-0.7 0.15 0.01" font="roboto"></a-text>
+      <a-text id="vr-info-food" value="" align="left" color="#ffffff"
+        width="1.3" wrap-count="40" position="-0.7 0.02 0.01" font="roboto"></a-text>
+      <a-text id="vr-info-desc" value="" align="left" color="#cccccc"
+        width="1.3" wrap-count="50" position="-0.7 -0.15 0.01" font="roboto"></a-text>
+      <a-entity id="vr-info-close" class="clickable-vr"
+        geometry="primitive: plane; width: 0.3; height: 0.12"
+        material="color: #e74c3c; opacity: 0.8"
+        position="0 -0.5 0.01"
+        text="value: DONG; align: center; color: #fff; width: 1.2; wrapCount: 10">
+      </a-entity>
+    </a-entity>
+
+    <!-- ===== CAMERA RIG ===== -->
+    <a-entity id="rig" position="0 0 12">
+      <a-camera
+        id="main-camera"
+        look-controls="pointerLockEnabled: false; reverseMouseDrag: false"
+        wasd-controls="acceleration: 65; fly: false"
+        position="0 1.6 0"
+        near="0.1" far="500"
+        cursor="rayOrigin: mouse"
+        raycaster="objects: .clickable, .clickable-vr; far: 100"
+      >
+        <!-- Center reticle for VR gaze -->
+        <a-cursor
+          id="cursor"
+          raycaster="objects: .clickable, .clickable-vr; far: 50"
+          fuse="false"
+          opacity="0"
+        ></a-cursor>
+      </a-camera>
+
+      <!-- VR Controller - Left hand -->
+      <a-entity id="left-hand"
+        laser-controls="hand: left; model: true"
+        raycaster="objects: .clickable, .clickable-vr; far: 30; lineColor: #2ecc71; lineOpacity: 0.6"
+        visible="false">
+      </a-entity>
+
+      <!-- VR Controller - Right hand -->
+      <a-entity id="right-hand"
+        laser-controls="hand: right; model: true"
+        raycaster="objects: .clickable, .clickable-vr; far: 30; lineColor: #2ecc71; lineOpacity: 0.6"
+        visible="false">
+      </a-entity>
+    </a-entity>
+
+  </a-scene>
+
+  <!-- Script Modules -->
+  <script src="js/animals-data.js"></script>
+  <script src="js/audio-manager.js"></script>
+  <script src="js/scene-builder.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

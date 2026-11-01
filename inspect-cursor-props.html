@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/vendor/aframe.min.js"></script>
+</head>
+<body>
+<a-scene>
+  <a-camera id="cam" cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-camera>
+</a-scene>
+<div id="res"></div>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var cam = document.querySelector('#cam');
+    var cursorComp = cam.components.cursor;
+    var keys = [];
+    for (var k in cursorComp) {
+      keys.push(k + ':' + typeof cursorComp[k]);
+    }
+    document.getElementById('res').innerText = keys.join(', ');
+  }, 1000);
+});
+</script>
+</body>
+</html>

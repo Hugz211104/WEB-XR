@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/vendor/aframe.min.js"></script>
+<script src="js/vendor/aframe-extras.min.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<iframe id="app" src="index.html" style="width:1280px;height:720px;"></iframe>
+<div id="diag"></div>
+<script>
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    var win = document.getElementById('app').contentWindow;
+    var doc = document.getElementById('app').contentDocument;
+
+    // 1. Check if welcome screen is visible
+    var welcomeVisible = win.getComputedStyle(doc.getElementById('welcome-screen')).display !== 'none';
+    
+    // 2. Click start button
+    var btnStart = doc.getElementById('btn-start');
+    if (btnStart) btnStart.click();
+
+    // 3. Check start state
+    var expStarted = win.experienceStarted;
+    var welcomeAfter = win.getComputedStyle(doc.getElementById('welcome-screen')).display !== 'none';
+
+    // 4. Check camera and cursor
+    var cam = doc.getElementById('main-camera');
+    var cursorDesktop = doc.getElementById('cursor-desktop');
+    var cursorComp = cursorDesktop ? cursorDesktop.components.cursor : null;
+    var camComp = cam ? cam.components.camera : null;
+
+    // 5. Try teleporting to tiger
+    var tigerBtn = doc.getElementById('nav-btn-tiger');
+    if (tigerBtn) tigerBtn.click();
+
+    setTimeout(() => {
+      var rigPos = doc.getElementById('rig').getAttribute('position');
+      var infoVisible = win.getComputedStyle(doc.getElementById('info-panel')).display !== 'none';
+      var infoName = doc.getElementById('info-name').innerText;
+
+      document.getElementById('diag').innerText = JSON.stringify({
+        welcomeVisible: welcomeVisible,
+        expStarted: expStarted,
+        welcomeAfter: welcomeAfter,
+        hasCursor: !!cursorComp,
+        cursorHasCamera: cursorComp ? !!cursorComp.camera : false,
+        rigPosAfterTeleport: rigPos,
+        infoVisible: infoVisible,
+        infoName: infoName
+      });
+    }, 1000);
+  }, 2000);
+});
+</script>
+</body>
+</html>

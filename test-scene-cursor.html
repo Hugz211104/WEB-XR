@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/vendor/aframe.min.js"></script>
+</head>
+<body>
+<a-scene cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+  <a-box id="targetBox" class="clickable" position="0 1.6 -3" color="red"></a-box>
+  <a-entity id="rig" position="0 0 0">
+    <a-camera id="cam"></a-camera>
+  </a-entity>
+</a-scene>
+<div id="res"></div>
+<script>
+setTimeout(function() {
+  var sceneEl = document.querySelector('a-scene');
+  var cursorComp = sceneEl ? sceneEl.components.cursor : null;
+  var cam = cursorComp ? cursorComp.camera : null;
+  document.getElementById('res').innerText = JSON.stringify({
+    hasCursor: !!cursorComp,
+    cursorCamera: cam ? !!cam.el : false,
+    camTag: cam && cam.el ? cam.el.tagName : 'NONE'
+  });
+}, 1500);
+</script>
+</body>
+</html>

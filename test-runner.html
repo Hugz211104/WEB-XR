@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+window.testErrors = [];
+window.onerror = function(msg, url, line, col, error) {
+  window.testErrors.push({msg: msg, url: url, line: line, col: col, error: error ? error.stack : ''});
+};
+console.error = function() {
+  window.testErrors.push({type: 'console.error', args: Array.from(arguments)});
+};
+</script>
+</head>
+<body>
+<iframe id="testFrame" src="index.html" style="width:1000px;height:800px;"></iframe>
+<script>
+setTimeout(function() {
+  var frameDoc = document.getElementById('testFrame').contentDocument;
+  var frameWin = document.getElementById('testFrame').contentWindow;
+  var div = document.createElement('div');
+  div.id = 'report';
+  div.innerText = JSON.stringify({
+    errors: window.testErrors,
+    frameErrors: frameWin ? frameWin.testErrors : null,
+    isSceneLoaded: frameDoc && frameDoc.querySelector('a-scene') ? frameDoc.querySelector('a-scene').hasLoaded : false,
+    exhibitsCount: frameDoc && frameDoc.querySelectorAll('#exhibits > *') ? frameDoc.querySelectorAll('#exhibits > *').length : 0
+  });
+  document.body.appendChild(div);
+}, 3000);
+</script>
+</body>
+</html>
